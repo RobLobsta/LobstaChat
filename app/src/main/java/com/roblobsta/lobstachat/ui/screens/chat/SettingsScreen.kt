@@ -58,6 +58,26 @@ fun SettingsScreen(
                     )
                     MediumLabelText(text = "Show RAM usage")
                 }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Checkbox(
+                        checked = uiState.ttsEnabled,
+                        onCheckedChange = { viewModel.setTtsEnabled(it) },
+                    )
+                    MediumLabelText(text = "Enable Text-to-Speech (TTS)")
+                }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Checkbox(
+                        checked = uiState.sttEnabled,
+                        onCheckedChange = { viewModel.setSttEnabled(it) },
+                    )
+                    MediumLabelText(text = "Enable Speech-to-Text (STT)")
+                }
                 Spacer(modifier = Modifier.height(16.dp))
                 Button(
                     onClick = {

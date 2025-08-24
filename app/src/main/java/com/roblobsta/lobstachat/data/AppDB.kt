@@ -24,9 +24,23 @@ val MIGRATION_1_2 =
         }
     }
 
+val MIGRATION_2_3 =
+    object : Migration(2, 3) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            database.execSQL("ALTER TABLE Chat ADD COLUMN sessionPath TEXT")
+        }
+    }
+
+val MIGRATION_4_5 =
+    object : Migration(4, 5) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            database.execSQL("CREATE TABLE IF NOT EXISTS `Persona` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `systemPrompt` TEXT NOT NULL, `modelId` INTEGER NOT NULL, `shortcutId` TEXT, `temperature` REAL NOT NULL, `topK` INTEGER NOT NULL, `topP` REAL NOT NULL, `minP` REAL NOT NULL, `xtcP` REAL NOT NULL, `xtcT` REAL NOT NULL)")
+        }
+    }
+
 @Database(
-    entities = [Chat::class, ChatMessage::class, LLMModel::class, Task::class, Folder::class],
-    version = 2,
+    entities = [Chat::class, ChatMessage::class, LLMModel::class, Task::class, Folder::class, Persona::class],
+    version = 5,
     exportSchema = true,
 )
 @TypeConverters(Converters::class)
@@ -38,6 +52,8 @@ abstract class AppRoomDatabase : RoomDatabase() {
     abstract fun llmModelDao(): LLMModelDao
 
     abstract fun taskDao(): TaskDao
+
+    abstract fun personaDao(): PersonaDao
 
     abstract fun folderDao(): FolderDao
 }
@@ -54,7 +70,7 @@ class AppDB(
                 application,
                 AppRoomDatabase::class.java,
                 "app-database",
-            ).addMigrations(MIGRATION_1_2)
+            ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_4_5)
             .build()
 
     /** Get all chats from the database sorted by dateUsed in descending order. */
@@ -220,6 +236,34 @@ class AppDB(
     suspend fun updateTask(task: Task) =
         withContext(Dispatchers.IO) {
             db.taskDao().updateTask(task)
+        }
+
+    // Personas
+
+    suspend fun getPersona(personaId: Long): Persona =
+        withContext(Dispatchers.IO) {
+            db.personaDao().getPersona(personaId)
+        }
+
+    fun getPersonas(): Flow<List<Persona>> = db.personaDao().getPersonas()
+
+    suspend fun addPersona(
+        name: String,
+        systemPrompt: String,
+        modelId: Long,
+        inferenceParams: InferenceParams
+    ) = withContext(Dispatchers.IO) {
+        db.personaDao().insertPersona(Persona(name = name, systemPrompt = systemPrompt, modelId = modelId, inferenceParams = inferenceParams))
+    }
+
+    suspend fun deletePersona(personaId: Long) =
+        withContext(Dispatchers.IO) {
+            db.personaDao().deletePersona(personaId)
+        }
+
+    suspend fun updatePersona(persona: Persona) =
+        withContext(Dispatchers.IO) {
+            db.personaDao().updatePersona(persona)
         }
 
     // Folders

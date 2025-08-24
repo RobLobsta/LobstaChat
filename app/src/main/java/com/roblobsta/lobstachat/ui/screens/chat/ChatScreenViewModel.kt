@@ -86,10 +86,19 @@ sealed class ChatScreenUIEvent {
         data class ToggleClearChatHistoryDialog(
             val visible: Boolean,
         ) : ChatScreenUIEvent()
+
+        data class ToggleVoiceConversation(
+            val active: Boolean,
+        ) : ChatScreenUIEvent()
+
+        data class SpeakResponse(
+            val text: String,
+        ) : ChatScreenUIEvent()
     }
 }
 
 data class ChatScreenUiState(
+    val voiceConversationActive: Boolean = false,
     val currChat: Chat? = null,
     val isGeneratingResponse: Boolean = false,
     val modelLoadingState: ChatScreenViewModel.ModelLoadingState = ChatScreenViewModel.ModelLoadingState.NOT_LOADED,
@@ -102,6 +111,8 @@ data class ChatScreenUiState(
     val showSettingsDialog: Boolean = false,
     val showClearChatHistoryDialog: Boolean = false,
     val showRAMUsageLabel: Boolean = true,
+    val ttsEnabled: Boolean = true,
+    val sttEnabled: Boolean = true,
     val errorDialog: ErrorDialog? = null,
     val spokenText: String? = null
 )
@@ -112,6 +123,7 @@ import android.app.Application
 class ChatScreenViewModel(
     private val application: Application,
     private val modelsRepository: ModelsRepository,
+    private val settingsRepository: SettingsRepository,
     private val lobstaLMManager: LobstaLMManager,
     private val appDB: AppDB,
     val markwon: Markwon
@@ -166,7 +178,12 @@ class ChatScreenViewModel(
 
     init {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(currChat = appDB.loadDefaultChat())
+            _uiState.value = _uiState.value.copy(
+                currChat = appDB.loadDefaultChat(),
+                showRAMUsageLabel = settingsRepository.isRamUsageEnabled(),
+                ttsEnabled = settingsRepository.isTtsEnabled(),
+                sttEnabled = settingsRepository.isSttEnabled()
+            )
         }
     }
 
@@ -261,6 +278,9 @@ class ChatScreenViewModel(
                         viewModelScope.launch {
                             appDB.updateChat(updatedChat.copy(contextSizeConsumed = response.contextLengthUsed))
                         }
+                        if (_uiState.value.voiceConversationActive) {
+                            onEvent(ChatScreenUIEvent.DialogEvents.SpeakResponse(response.response))
+                        }
                     },
                     onCancelled = {
                         // ignore CancellationException, as it was called because
@@ -299,6 +319,9 @@ class ChatScreenViewModel(
     fun deleteChat(chat: Chat) {
         viewModelScope.launch {
             stopGeneration()
+            chat.sessionPath?.let {
+                File(it).delete()
+            }
             appDB.deleteChat(chat)
             appDB.deleteMessages(chat.id)
             _uiState.value = _uiState.value.copy(currChat = null)
@@ -424,11 +447,27 @@ class ChatScreenViewModel(
                 _uiState.value = _uiState.value.copy(spokenText = event.text)
             }
 
+            is ChatScreenUIEvent.DialogEvents.ToggleVoiceConversation -> {
+                _uiState.value = _uiState.value.copy(voiceConversationActive = event.active)
+            }
+
             else -> {}
         }
     }
 
     fun toggleRAMUsageLabelVisibility() {
-        _uiState.value = _uiState.value.copy(showRAMUsageLabel = !_uiState.value.showRAMUsageLabel)
+        val newValue = !_uiState.value.showRAMUsageLabel
+        settingsRepository.setRamUsageEnabled(newValue)
+        _uiState.value = _uiState.value.copy(showRAMUsageLabel = newValue)
+    }
+
+    fun setTtsEnabled(enabled: Boolean) {
+        settingsRepository.setTtsEnabled(enabled)
+        _uiState.value = _uiState.value.copy(ttsEnabled = enabled)
+    }
+
+    fun setSttEnabled(enabled: Boolean) {
+        settingsRepository.setSttEnabled(enabled)
+        _uiState.value = _uiState.value.copy(sttEnabled = enabled)
     }
 }

@@ -52,5 +52,11 @@ private:
 
     void stopCompletion();
 
+    void saveSession(const char* filePath);
+
+    void loadSession(const char* filePath);
+
+    void clearContext();
+
     ~LLMInference();
 };

@@ -370,4 +370,10 @@ class LobstaChatLM {
 
     // TODO: Implement this in the JNI layer
     // private external fun editMessage(modelPtr: Long, index: Int, message: String)
+
+    external fun saveSession(filePath: String)
+
+    external fun loadSession(filePath: String)
+
+    external fun clearContext()
 }
