@@ -27,3 +27,4 @@ rootProject.name = "LobstaChat"
 include(":app")
 include(":lobstachat-lm")
 include(":lobstachat-hf-api")
+include(":lobstachat-data")

@@ -54,6 +54,7 @@ import kotlinx.coroutines.flow.StateFlow
 import org.koin.android.annotation.KoinViewModel
 import java.util.Date
 import kotlin.math.pow
+import android.app.Application
 
 private const val LOGTAG = "[LobstaChat-Kt]"
 private val LOGD: (String) -> Unit = { Log.d(LOGTAG, it) }
@@ -116,8 +117,6 @@ data class ChatScreenUiState(
     val errorDialog: ErrorDialog? = null,
     val spokenText: String? = null
 )
-
-import android.app.Application
 
 @KoinViewModel
 class ChatScreenViewModel(

@@ -11,6 +11,9 @@ set(LLAMA_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(LLAMA_BUILD_SERVER OFF CACHE BOOL "" FORCE)
 set(LLAMA_BUILD_LIB_SHARED OFF CACHE BOOL "" FORCE)
 
+# Disable llamafile which causes issues with armeabi-v7a
+set(GGML_LLAMAFILE OFF CACHE BOOL "" FORCE)
+
 add_subdirectory(${LLAMA_DIR} llama.cpp)
 
 set(LOBSTACHATLM_SOURCES
