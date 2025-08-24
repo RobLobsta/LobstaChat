@@ -66,6 +66,7 @@ android {
 }
 
 dependencies {
+    api(project(":lobstachat-data"))
     implementation(libs.kotlinx.coroutines)
     testImplementation(libs.junit)
     androidTestImplementation(libs.kotlinx.coroutines.test)

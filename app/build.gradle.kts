@@ -54,11 +54,18 @@ android {
     }
 }
 
+configurations {
+    all {
+        exclude(group = "org.jetbrains", module = "annotations-java5")
+    }
+}
+
 ksp {
     arg("KOIN_CONFIG_CHECK", "true")
 }
 
 dependencies {
+    implementation(libs.androidx.appcompat)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -66,12 +73,12 @@ dependencies {
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
-    implementation(libs.androidx.material3)
-    implementation(libs.androidx.material3.icons.extended)
+    implementation(libs.google.android.material)
     implementation(libs.androidx.compose.navigation)
 
     implementation(project(":lobstachat-lm"))
     implementation(project(":lobstachat-hf-api"))
+    api(project(":lobstachat-data"))
 
     // Koin: dependency injection
     implementation(libs.koin.android)
@@ -89,8 +96,12 @@ dependencies {
     implementation(libs.markwon.linkify)
     implementation(libs.markwon.html)
     implementation(libs.markwon.syntax.highlight)
-    implementation(libs.prism4j)
-    annotationProcessor(libs.prism4j.bundler)
+    implementation(libs.prism4j) {
+        exclude(group = "org.jetbrains", module = "annotations-java5")
+    }
+    annotationProcessor(libs.prism4j.bundler) {
+        exclude(group = "org.jetbrains", module = "annotations-java5")
+    }
 
     // Jetpack Paging3: loading paged data for Compose
     implementation(libs.androidx.paging.runtime)

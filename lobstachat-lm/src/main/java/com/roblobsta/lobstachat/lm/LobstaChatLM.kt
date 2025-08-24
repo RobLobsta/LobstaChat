@@ -166,23 +166,7 @@ class LobstaChatLM {
      *                    being swapped out to disk, potentially improving performance. (Default: false)
      * @property topK The number of top tokens to consider for sampling. (Default: 40)
      * @property topP The cumulative probability for top-p sampling. (Default: 0.9f)
-     * @property xtcP The probability for XTC sampling. (Default: 0.0f)
-     * @property xtcT The temperature for XTC sampling. (Default: 1.0f)
      */
-    data class InferenceParams(
-        val minP: Float = 0.1f,
-        val temperature: Float = 0.8f,
-        val storeChats: Boolean = true,
-        val contextSize: Long? = null,
-        val chatTemplate: String? = null,
-        val numThreads: Int = 4,
-        val useMmap: Boolean = true,
-        val useMlock: Boolean = false,
-        val topP: Float = 0.9f,
-        val topK: Int = 40,
-        val xtcP: Float = 0.0f,
-        val xtcT: Float = 1.0f,
-    )
 
     /**
      * Loads the GGUF model from the given path.
@@ -201,7 +185,7 @@ class LobstaChatLM {
      */
     suspend fun load(
         modelPath: String,
-        params: InferenceParams = InferenceParams(),
+        params: InferenceParams,
     ) = withContext(Dispatchers.IO) {
         val ggufReader = GGUFReader()
         ggufReader.load(modelPath)
@@ -211,10 +195,7 @@ class LobstaChatLM {
         nativePtr =
             loadModel(
                 modelPath = modelPath,
-                params = params.copy(
-                    contextSize = params.contextSize ?: modelContextSize,
-                    chatTemplate = params.chatTemplate ?: modelChatTemplate
-                )
+                params = params,
             )
     }
 

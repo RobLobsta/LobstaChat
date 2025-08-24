@@ -28,12 +28,11 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.core.annotation.Single
 import kotlin.time.measureTime
+import android.app.Application
+import java.io.File
 
 private const val LOGTAG = "[LobstaLMManager-Kt]"
 private val LOGD: (String) -> Unit = { Log.d(LOGTAG, it) }
-
-import android.app.Application
-import java.io.File
 
 @Single
 class LobstaLMManager(

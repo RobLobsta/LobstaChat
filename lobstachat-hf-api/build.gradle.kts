@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.jetbrains.kotlin.jvm)
     kotlin("plugin.serialization")
+    id("com.google.devtools.ksp")
 }
 
 dependencies {
@@ -10,6 +11,11 @@ dependencies {
     implementation(libs.ktor.serialization.kotlinx.json)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(kotlin("test"))
+
+    // Koin: dependency injection
+    implementation(libs.koin.core)
+    implementation(libs.koin.annotations)
+    ksp(libs.koin.ksp.compiler)
 }
 
 tasks.test {

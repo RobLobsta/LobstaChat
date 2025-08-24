@@ -17,7 +17,7 @@ data class Persona(
     var modelId: Long = -1,
     var shortcutId: String? = null,
     @Embedded
-    var inferenceParams: InferenceParams = InferenceParams(),
+    var inferenceParams: InferenceParamsData = InferenceParamsData(),
     @Transient var modelName: String = "",
 )
 
