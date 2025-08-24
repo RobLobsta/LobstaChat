@@ -24,6 +24,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
+import android.speech.tts.TextToSpeech
 import android.text.Spanned
 import android.util.Log
 import android.widget.Toast
@@ -107,6 +108,8 @@ import compose.icons.feathericons.Mic
 import compose.icons.feathericons.Send
 import compose.icons.feathericons.StopCircle
 import compose.icons.feathericons.User
+import compose.icons.feathericons.Archive
+import compose.icons.feathericons.Headphones
 import com.roblobsta.lobstachat.R
 import com.roblobsta.lobstachat.data.Chat
 import com.roblobsta.lobstachat.data.Task
@@ -125,9 +128,10 @@ import org.koin.android.ext.android.inject
 private const val LOGTAG = "[ChatActivity-Kt]"
 private val LOGD: (String) -> Unit = { Log.d(LOGTAG, it) }
 
-class ChatActivity : ComponentActivity() {
+class ChatActivity : ComponentActivity(), TextToSpeech.OnInitListener {
     private val viewModel: ChatScreenViewModel by inject()
     private var modelUnloaded = false
+    private lateinit var tts: TextToSpeech
 
     private val speechRecognizerLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
@@ -150,8 +154,23 @@ class ChatActivity : ComponentActivity() {
         speechRecognizerLauncher.launch(intent)
     }
 
+    private fun speak(text: String, onDone: () -> Unit = {}) {
+        if (::tts.isInitialized) {
+            tts.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
+                override fun onStart(utteranceId: String?) {}
+                override fun onDone(utteranceId: String?) {
+                    onDone()
+                }
+                override fun onError(utteranceId: String?) {}
+            })
+            tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, "LOBSTACHAT_UTTERANCE_ID")
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        tts = TextToSpeech(this, this)
 
         /**
          * Check if the activity was launched by an intent to share text with the app
@@ -191,7 +210,8 @@ class ChatActivity : ComponentActivity() {
                     ChatActivityScreenUI(
                         viewModel,
                         onEditChatParamsClick = { navController.navigate("edit-chat") },
-                        onMicClick = { launchSpeechRecognizer() }
+                        onMicClick = { launchSpeechRecognizer() },
+                        onSpeakClick = { text, onDone -> speak(text, onDone) }
                     )
                 }
             }
@@ -216,6 +236,22 @@ class ChatActivity : ComponentActivity() {
         modelUnloaded = viewModel.unloadModel()
         LOGD("onStop() called - model unloaded result: $modelUnloaded")
     }
+
+    override fun onDestroy() {
+        if (::tts.isInitialized) {
+            tts.stop()
+            tts.shutdown()
+        }
+        super.onDestroy()
+    }
+
+    override fun onInit(status: Int) {
+        if (status == TextToSpeech.SUCCESS) {
+            LOGD("TTS initialization successful")
+        } else {
+            LOGD("TTS initialization failed")
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -224,12 +260,26 @@ fun ChatActivityScreenUI(
     viewModel: ChatScreenViewModel,
     onEditChatParamsClick: () -> Unit,
     onMicClick: () -> Unit,
+    onSpeakClick: (String, () -> Unit) -> Unit,
 ) {
     val context = LocalContext.current
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val currChat by viewModel.currChatState.collectAsStateWithLifecycle(lifecycleOwner = LocalLifecycleOwner.current)
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     LaunchedEffect(currChat) { viewModel.loadModel() }
+
+    LaunchedEffect(uiState.uiEvent) {
+        if (uiState.uiEvent is ChatScreenUIEvent.DialogEvents.SpeakResponse) {
+            val event = uiState.uiEvent as ChatScreenUIEvent.DialogEvents.SpeakResponse
+            onSpeakClick(event.text) {
+                if (uiState.voiceConversationActive) {
+                    onMicClick()
+                }
+            }
+        }
+    }
+
     LobstaChatTheme {
         ModalNavigationDrawer(
             drawerState = drawerState,
@@ -326,6 +376,19 @@ fun ChatActivityScreenUI(
                                         )
                                     }
                                 }
+                                Box {
+                                    IconButton(
+                                        onClick = {
+                                            viewModel.onEvent(ChatScreenUIEvent.DialogEvents.ToggleTaskListBottomList(true))
+                                        },
+                                    ) {
+                                        Icon(
+                                            FeatherIcons.Archive,
+                                            contentDescription = "Tasks",
+                                            tint = MaterialTheme.colorScheme.secondary,
+                                        )
+                                    }
+                                }
                             }
                         },
                     )
@@ -338,7 +401,7 @@ fun ChatActivityScreenUI(
                             .background(MaterialTheme.colorScheme.surface),
                 ) {
                     if (currChat != null) {
-                        ScreenUI(viewModel, currChat!!, onMicClick)
+                        ScreenUI(viewModel, currChat!!, onMicClick, onSpeakClick)
                     }
                 }
             }
@@ -376,6 +439,7 @@ private fun ColumnScope.ScreenUI(
     viewModel: ChatScreenViewModel,
     currChat: Chat,
     onMicClick: () -> Unit,
+    onSpeakClick: (String) -> Unit,
 ) {
     val isGeneratingResponse by viewModel.isGeneratingResponse.collectAsStateWithLifecycle()
     RAMUsageLabel(viewModel)
@@ -384,6 +448,7 @@ private fun ColumnScope.ScreenUI(
         viewModel,
         isGeneratingResponse,
         currChat.id,
+        onSpeakClick,
     )
     MessageInput(
         viewModel,
@@ -422,10 +487,13 @@ private fun ColumnScope.MessagesList(
     viewModel: ChatScreenViewModel,
     isGeneratingResponse: Boolean,
     chatId: Long,
+    onSpeakClick: (String) -> Unit,
 ) {
     val context = LocalContext.current
     val listState = rememberLazyListState()
     val messages by viewModel.getChatMessages(chatId).collectAsState(emptyList())
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val ttsEnabled = uiState.ttsEnabled
     val lastUserMessageIndex by remember { derivedStateOf { messages.indexOfLast { it.isUserMessage } } }
     val partialResponse by viewModel.partialResponse.collectAsStateWithLifecycle()
     LaunchedEffect(messages.size, partialResponse) {
@@ -466,6 +534,7 @@ private fun ColumnScope.MessagesList(
                         },
                     )
                 },
+                onSpeakClicked = { onSpeakClick(chatMessage.message) },
                 onMessageEdited = { newMessage ->
                     // TODO: Implement this in the JNI layer
                     // viewModel.lobstaLMManager.editMessage(i, newMessage)
@@ -473,6 +542,7 @@ private fun ColumnScope.MessagesList(
                 },
                 // allow editing the message only if it is the last message in the list
                 allowEditing = (i == lastUserMessageIndex),
+                showSpeakButton = ttsEnabled
             )
         }
         if (isGeneratingResponse) {
@@ -485,10 +555,12 @@ private fun ColumnScope.MessagesList(
                         false,
                         {},
                         {},
+                        {},
                         onMessageEdited = {
                             // Not applicable as allowEditing is set to False
                         },
                         allowEditing = false,
+                        showSpeakButton = false
                     )
                 } else {
                     Row(
@@ -528,9 +600,11 @@ private fun LazyItemScope.MessageListItem(
     isUserMessage: Boolean,
     onCopyClicked: () -> Unit,
     onShareClicked: () -> Unit,
+    onSpeakClicked: () -> Unit,
     onMessageEdited: (String) -> Unit,
     modifier: Modifier = Modifier,
     allowEditing: Boolean,
+    showSpeakButton: Boolean,
 ) {
     var isEditing by remember { mutableStateOf(false) }
     val context = LocalContext.current
@@ -576,6 +650,14 @@ private fun LazyItemScope.MessageListItem(
                         modifier = Modifier.clickable { onShareClicked() },
                         fontSize = 6.sp,
                     )
+                    if (showSpeakButton) {
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Speak",
+                            modifier = Modifier.clickable { onSpeakClicked() },
+                            fontSize = 6.sp,
+                        )
+                    }
                     responseGenerationSpeed?.let {
                         Spacer(modifier = Modifier.width(6.dp))
                         Box(
@@ -797,11 +879,21 @@ private fun MessageInput(
                             }
                         }
                     } else {
-                        IconButton(onClick = onMicClick) {
+                        if (uiState.sttEnabled) {
+                            IconButton(onClick = onMicClick) {
+                                Icon(
+                                    imageVector = FeatherIcons.Mic,
+                                    contentDescription = "Voice input",
+                                    tint = MaterialTheme.colorScheme.onPrimary,
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                        }
+                        IconButton(onClick = { viewModel.onEvent(ChatScreenUIEvent.DialogEvents.ToggleVoiceConversation(!uiState.voiceConversationActive)) }) {
                             Icon(
-                                imageVector = FeatherIcons.Mic,
-                                contentDescription = "Voice input",
-                                tint = MaterialTheme.colorScheme.onPrimary,
+                                imageVector = FeatherIcons.Headphones,
+                                contentDescription = "Voice conversation",
+                                tint = if (uiState.voiceConversationActive) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onPrimary,
                             )
                         }
                         Spacer(modifier = Modifier.width(8.dp))
@@ -895,7 +987,7 @@ private fun TasksListBottomSheet(viewModel: ChatScreenViewModel) {
                             it.copy(modelName = modelName)
                         },
                         onTaskSelected = { task ->
-                            createChatFromTask(viewModel, task)
+                            applyTaskToChat(viewModel, task)
                         },
                         onUpdateTaskClick = { // Not applicable as showTaskOptions is set to `false`
                         },
@@ -969,22 +1061,17 @@ private fun ChangeFolderDialog(viewModel: ChatScreenViewModel) {
     }
 }
 
-private fun createChatFromTask(
+private fun applyTaskToChat(
     viewModel: ChatScreenViewModel,
     task: Task,
 ) {
-    // Using parameters from the `task`
-    // create a `Chat` instance and switch to it
-    viewModel.modelsRepository.getModelFromId(task.modelId)?.let { model ->
-        val newTask =
-            viewModel.appDB.addChat(
-                chatName = task.name,
-                chatTemplate = model.chatTemplate,
-                systemPrompt = task.systemPrompt,
-                llmModelId = task.modelId,
-                isTask = true,
-            )
-        viewModel.switchChat(newTask)
-        viewModel.onEvent(ChatScreenUIEvent.DialogEvents.ToggleTaskListBottomList(visible = false))
+    viewModel.currChatState.value?.let {
+        val updatedChat = it.copy(
+            systemPrompt = task.systemPrompt,
+            llmModelId = task.modelId,
+            chatTemplate = viewModel.modelsRepository.getModelFromId(task.modelId)?.chatTemplate ?: ""
+        )
+        viewModel.updateChat(updatedChat)
     }
+    viewModel.onEvent(ChatScreenUIEvent.DialogEvents.ToggleTaskListBottomList(visible = false))
 }

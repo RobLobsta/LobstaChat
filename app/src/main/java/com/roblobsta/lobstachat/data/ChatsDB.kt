@@ -86,6 +86,11 @@ data class Chat(
      * -1 indicates that the chat does not belong to any folder.
      */
     var folderId: Long = -1L,
+    /**
+     * The path to the saved session file for this chat.
+     * This is used to restore the model's state when the chat is loaded.
+     */
+    var sessionPath: String? = null,
 )
 
 @Dao

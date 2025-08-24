@@ -32,9 +32,13 @@ import kotlin.time.measureTime
 private const val LOGTAG = "[LobstaLMManager-Kt]"
 private val LOGD: (String) -> Unit = { Log.d(LOGTAG, it) }
 
+import android.app.Application
+import java.io.File
+
 @Single
 class LobstaLMManager(
     private val appDB: AppDB,
+    private val application: Application,
 ) {
     private var instance: LobstaLM? = null
     private var responseGenerationJob: Job? = null
@@ -73,18 +77,24 @@ class LobstaLMManager(
                     instance = LobstaLM().apply {
                         load(modelPath, params)
                         LOGD("Model loaded")
-                        if (chat.systemPrompt.isNotEmpty()) {
-                            addSystemPrompt(chat.systemPrompt)
-                            LOGD("System prompt added")
-                        }
-                        if (!chat.isTask) {
-                            appDB.getMessagesForModel(chat.id).forEach { message ->
-                                if (message.isUserMessage) {
-                                    addUserMessage(message.message)
-                                    LOGD("User message added: ${message.message}")
-                                } else {
-                                    addAssistantMessage(message.message)
-                                    LOGD("Assistant message added: ${message.message}")
+
+                        if (chat.sessionPath != null && File(chat.sessionPath!!).exists()) {
+                            loadSession(chat.sessionPath!!)
+                            LOGD("Session loaded from ${chat.sessionPath}")
+                        } else {
+                            if (chat.systemPrompt.isNotEmpty()) {
+                                addSystemPrompt(chat.systemPrompt)
+                                LOGD("System prompt added")
+                            }
+                            if (!chat.isTask) {
+                                appDB.getMessagesForModel(chat.id).forEach { message ->
+                                    if (message.isUserMessage) {
+                                        addUserMessage(message.message)
+                                        LOGD("User message added: ${message.message}")
+                                    } else {
+                                        addAssistantMessage(message.message)
+                                        LOGD("Assistant message added: ${message.message}")
+                                    }
                                 }
                             }
                         }
@@ -123,6 +133,12 @@ class LobstaLMManager(
                 isInferenceOn = true
                 var response = ""
                 try {
+                    val contextSize = currentInstance.getContextLengthUsed()
+                    val contextSizeThreshold = (currentChat.contextSize * 0.8).toInt()
+                    if (contextSize > contextSizeThreshold) {
+                        summarizeChat(currentInstance, currentChat)
+                    }
+
                     val duration =
                         measureTime {
                             currentInstance.getResponseAsFlow(query).collect { piece ->
@@ -136,6 +152,15 @@ class LobstaLMManager(
                     // once the response is generated
                     // add it to the messages database
                     appDB.addAssistantMessage(currentChat.id, response)
+
+                    if (currentChat.sessionPath == null) {
+                        val sessionPath = getSessionPath(currentChat.id)
+                        currentChat.sessionPath = sessionPath
+                        appDB.updateChat(currentChat)
+                    }
+                    currentInstance.saveSession(currentChat.sessionPath!!)
+                    LOGD("Session saved to ${currentChat.sessionPath}")
+
                     withContext(Dispatchers.Main) {
                         isInferenceOn = false
                         onSuccess(
@@ -177,5 +202,48 @@ class LobstaLMManager(
         if (job.isActive) {
             job.cancel()
         }
+    }
+
+    private fun getSessionPath(chatId: Long): String {
+        val sessionsDir = File(application.filesDir, "sessions")
+        if (!sessionsDir.exists()) {
+            sessionsDir.mkdirs()
+        }
+        return File(sessionsDir, "chat_${chatId}.bin").absolutePath
+    }
+
+    private suspend fun summarizeChat(instance: LobstaLM, chat: Chat) {
+        LOGD("Summarizing chat ${chat.id}")
+        val messages = appDB.getMessagesForModel(chat.id)
+        val conversation = messages.joinToString("\n") {
+            if (it.isUserMessage) "User: ${it.message}" else "Assistant: ${it.message}"
+        }
+        val prompt = "Please summarize the following conversation concisely:\n$conversation"
+
+        var summary = ""
+        instance.getResponseAsFlow(prompt).collect { piece ->
+            summary += piece
+        }
+
+        instance.clearContext()
+        instance.addSystemPrompt(chat.systemPrompt)
+        instance.addAssistantMessage(summary)
+
+        // Keep the last 2 messages to maintain conversational flow
+        val lastMessages = messages.takeLast(2)
+        appDB.deleteMessages(chat.id)
+        appDB.addAssistantMessage(chat.id, summary)
+        lastMessages.forEach {
+            if (it.isUserMessage) {
+                instance.addUserMessage(it.message)
+                appDB.addUserMessage(chat.id, it.message)
+            } else {
+                instance.addAssistantMessage(it.message)
+                appDB.addAssistantMessage(chat.id, it.message)
+            }
+        }
+
+        instance.saveSession(chat.sessionPath!!)
+        LOGD("Chat ${chat.id} summarized and new session saved to ${chat.sessionPath}")
     }
 }

@@ -95,3 +95,27 @@ Java_com_roblobsta_lobstachat_lm_LobstaChatLM_stopCompletion(JNIEnv* env, jobjec
     auto* llmInference = reinterpret_cast<LLMInference*>(modelPtr);
     llmInference->stopCompletion();
 }
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_roblobsta_lobstachat_lm_LobstaChatLM_saveSession(JNIEnv* env, jobject thiz, jlong modelPtr, jstring filePath) {
+    jboolean isCopy = true;
+    const char* filePathCstr = env->GetStringUTFChars(filePath, &isCopy);
+    auto* llmInference = reinterpret_cast<LLMInference*>(modelPtr);
+    llmInference->saveSession(filePathCstr);
+    env->ReleaseStringUTFChars(filePath, filePathCstr);
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_roblobsta_lobstachat_lm_LobstaChatLM_loadSession(JNIEnv* env, jobject thiz, jlong modelPtr, jstring filePath) {
+    jboolean isCopy = true;
+    const char* filePathCstr = env->GetStringUTFChars(filePath, &isCopy);
+    auto* llmInference = reinterpret_cast<LLMInference*>(modelPtr);
+    llmInference->loadSession(filePathCstr);
+    env->ReleaseStringUTFChars(filePath, filePathCstr);
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_roblobsta_lobstachat_lm_LobstaChatLM_clearContext(JNIEnv* env, jobject thiz, jlong modelPtr) {
+    auto* llmInference = reinterpret_cast<LLMInference*>(modelPtr);
+    llmInference->clearContext();
+}

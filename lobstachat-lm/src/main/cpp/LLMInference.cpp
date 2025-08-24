@@ -226,6 +226,31 @@ LLMInference::stopCompletion() {
     }
 }
 
+void
+LLMInference::saveSession(const char* filePath) {
+    if (!_ctx) {
+        return;
+    }
+    llama_state_save_file(_ctx, filePath, nullptr, 0);
+}
+
+void
+LLMInference::loadSession(const char* filePath) {
+    if (!_ctx) {
+        return;
+    }
+    size_t n_token_count_out = 0;
+    llama_state_load_file(_ctx, filePath, nullptr, 0, &n_token_count_out);
+}
+
+void
+LLMInference::clearContext() {
+    if (!_ctx) {
+        return;
+    }
+    llama_memory_clear(llama_get_memory(_ctx), true);
+}
+
 LLMInference::~LLMInference() {
     LOGi("deallocating LLMInference instance");
     // free memory held by the message text in messages
