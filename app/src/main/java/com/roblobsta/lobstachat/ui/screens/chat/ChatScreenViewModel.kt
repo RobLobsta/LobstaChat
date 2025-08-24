@@ -60,6 +60,7 @@ private val LOGD: (String) -> Unit = { Log.d(LOGTAG, it) }
 
 sealed class ChatScreenUIEvent {
     data object Idle : ChatScreenUIEvent()
+    data class OnSpokenText(val text: String) : ChatScreenUIEvent()
 
     sealed class DialogEvents {
         data class ToggleChangeFolderDialog(
@@ -101,7 +102,8 @@ data class ChatScreenUiState(
     val showSettingsDialog: Boolean = false,
     val showClearChatHistoryDialog: Boolean = false,
     val showRAMUsageLabel: Boolean = true,
-    val errorDialog: ErrorDialog? = null
+    val errorDialog: ErrorDialog? = null,
+    val spokenText: String? = null
 )
 
 import android.app.Application
@@ -416,6 +418,10 @@ class ChatScreenViewModel(
 
             is ChatScreenUIEvent.DialogEvents.ToggleClearChatHistoryDialog -> {
                 _uiState.value = _uiState.value.copy(showClearChatHistoryDialog = event.visible)
+            }
+
+            is ChatScreenUIEvent.OnSpokenText -> {
+                _uiState.value = _uiState.value.copy(spokenText = event.text)
             }
 
             else -> {}
