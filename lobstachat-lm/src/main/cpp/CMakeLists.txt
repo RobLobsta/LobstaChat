@@ -9,78 +9,82 @@ set(GGML_DIR ${LLAMA_DIR}/ggml)
 set(COMMON_DIR ${LLAMA_DIR}/common)
 set(VENDOR_DIR ${LLAMA_DIR}/vendor)
 set(LOBSTACHATLM_SOURCES
+        # ggml
+        ${GGML_DIR}/src/ggml.c
+        ${GGML_DIR}/src/ggml.cpp
         ${GGML_DIR}/src/ggml-alloc.c
         ${GGML_DIR}/src/ggml-backend.cpp
+        ${GGML_DIR}/src/ggml-opt.cpp
         ${GGML_DIR}/src/ggml-threading.cpp
         ${GGML_DIR}/src/ggml-quants.c
+        ${GGML_DIR}/src/gguf.cpp
         ${GGML_DIR}/src/ggml-backend-reg.cpp
-        ${GGML_DIR}/src/ggml-opt.cpp
-        ${GGML_DIR}/src/ggml-cpu/arch/arm/quants.c
-        ${GGML_DIR}/src/ggml-cpu/ops.cpp
-        ${GGML_DIR}/src/ggml-cpu/vec.cpp
-        ${GGML_DIR}/src/ggml-cpu/quants.c
-        ${GGML_DIR}/src/ggml-cpu/traits.cpp
-        ${GGML_DIR}/src/ggml-cpu/unary-ops.cpp
-        ${GGML_DIR}/src/ggml-cpu/binary-ops.cpp
+
+        # ggml-cpu
         ${GGML_DIR}/src/ggml-cpu/ggml-cpu.c
         ${GGML_DIR}/src/ggml-cpu/ggml-cpu.cpp
-        ${GGML_DIR}/src/ggml.c
-        ${GGML_DIR}/src/gguf.cpp
+        ${GGML_DIR}/src/ggml-cpu/repack.cpp
+        ${GGML_DIR}/src/ggml-cpu/hbm.cpp
+        ${GGML_DIR}/src/ggml-cpu/quants.c
+        ${GGML_DIR}/src/ggml-cpu/traits.cpp
+        ${GGML_DIR}/src/ggml-cpu/amx/amx.cpp
+        ${GGML_DIR}/src/ggml-cpu/amx/mmq.cpp
+        ${GGML_DIR}/src/ggml-cpu/binary-ops.cpp
+        ${GGML_DIR}/src/ggml-cpu/unary-ops.cpp
+        ${GGML_DIR}/src/ggml-cpu/vec.cpp
+        ${GGML_DIR}/src/ggml-cpu/ops.cpp
+        ${GGML_DIR}/src/ggml-cpu/arch/arm/quants.c
+        ${GGML_DIR}/src/ggml-cpu/arch/arm/repack.cpp
 
+        # llama
         ${LLAMA_DIR}/src/llama.cpp
-        ${LLAMA_DIR}/src/llama-vocab.cpp
-        ${LLAMA_DIR}/src/llama-grammar.cpp
-        ${LLAMA_DIR}/src/llama-sampling.cpp
-        ${LLAMA_DIR}/src/llama-context.cpp
-        ${LLAMA_DIR}/src/llama-model.cpp
-        ${LLAMA_DIR}/src/llama-model-loader.cpp
-        ${LLAMA_DIR}/src/llama-impl.cpp
-        ${LLAMA_DIR}/src/llama-memory.cpp
-        ${LLAMA_DIR}/src/llama-memory-recurrent.cpp
-        ${LLAMA_DIR}/src/llama-memory-hybrid.cpp
-        ${LLAMA_DIR}/src/llama-mmap.cpp
-        ${LLAMA_DIR}/src/llama-hparams.cpp
-        ${LLAMA_DIR}/src/llama-hparams.cpp
-        ${LLAMA_DIR}/src/llama-kv-cache-unified-iswa.cpp
-        ${LLAMA_DIR}/src/llama-kv-cache-unified.cpp
-        ${LLAMA_DIR}/src/llama-batch.cpp
-        ${LLAMA_DIR}/src/llama-arch.cpp
         ${LLAMA_DIR}/src/llama-adapter.cpp
+        ${LLAMA_DIR}/src/llama-arch.cpp
+        ${LLAMA_DIR}/src/llama-batch.cpp
         ${LLAMA_DIR}/src/llama-chat.cpp
+        ${LLAMA_DIR}/src/llama-context.cpp
+        ${LLAMA_DIR}/src/llama-cparams.cpp
+        ${LLAMA_DIR}/src/llama-grammar.cpp
         ${LLAMA_DIR}/src/llama-graph.cpp
-        ${LLAMA_DIR}/src/unicode.h
-        ${LLAMA_DIR}/src/unicode.cpp
+        ${LLAMA_DIR}/src/llama-hparams.cpp
+        ${LLAMA_DIR}/src/llama-impl.cpp
+        ${LLAMA_DIR}/src/llama-io.cpp
+        ${LLAMA_DIR}/src/llama-kv-cache-unified.cpp
+        ${LLAMA_DIR}/src/llama-kv-cache-unified-iswa.cpp
+        ${LLAMA_DIR}/src/llama-memory.cpp
+        ${LLAMA_DIR}/src/llama-memory-hybrid.cpp
+        ${LLAMA_DIR}/src/llama-memory-recurrent.cpp
+        ${LLAMA_DIR}/src/llama-mmap.cpp
+        ${LLAMA_DIR}/src/llama-model-loader.cpp
+        ${LLAMA_DIR}/src/llama-model-saver.cpp
+        ${LLAMA_DIR}/src/llama-model.cpp
+        ${LLAMA_DIR}/src/llama-quant.cpp
+        ${LLAMA_DIR}/src/llama-sampling.cpp
+        ${LLAMA_DIR}/src/llama-vocab.cpp
         ${LLAMA_DIR}/src/unicode-data.cpp
+        ${LLAMA_DIR}/src/unicode.cpp
 
-        ${VENDOR_DIR}/nlohmann/json_fwd.hpp
-        ${VENDOR_DIR}/nlohmann/json.hpp
-
+        # common
         ${COMMON_DIR}/arg.cpp
-        ${COMMON_DIR}/base64.hpp
+        ${COMMON_DIR}/chat-parser.cpp
+        ${COMMON_DIR}/chat.cpp
         ${COMMON_DIR}/common.cpp
         ${COMMON_DIR}/console.cpp
+        ${COMMON_DIR}/json-partial.cpp
         ${COMMON_DIR}/json-schema-to-grammar.cpp
+        ${COMMON_DIR}/llguidance.cpp
         ${COMMON_DIR}/log.cpp
         ${COMMON_DIR}/ngram-cache.cpp
+        ${COMMON_DIR}/regex-partial.cpp
         ${COMMON_DIR}/sampling.cpp
+        ${COMMON_DIR}/speculative.cpp
 
+        # jni
         LLMInference.cpp
         lobstachatlm.cpp
 )
 set(GGUF_READER_SOURCES
         ${GGML_DIR}/src/ggml.c
-        ${GGML_DIR}/src/ggml-alloc.c
-        ${GGML_DIR}/src/ggml-backend.cpp
-        ${GGML_DIR}/src/ggml-threading.cpp
-        ${GGML_DIR}/src/ggml-quants.c
-        ${GGML_DIR}/src/ggml-backend-reg.cpp
-        ${GGML_DIR}/src/ggml-opt.cpp
-        ${GGML_DIR}/src/ggml-cpu/ops.cpp
-        ${GGML_DIR}/src/ggml-cpu/vec.cpp
-        ${GGML_DIR}/src/ggml-cpu/unary-ops.cpp
-        ${GGML_DIR}/src/ggml-cpu/binary-ops.cpp
-        ${GGML_DIR}/src/ggml-cpu/ggml-cpu.c
-        ${GGML_DIR}/src/ggml-cpu/ggml-cpu.cpp
         ${GGML_DIR}/src/gguf.cpp
         GGUFReader.cpp
 )

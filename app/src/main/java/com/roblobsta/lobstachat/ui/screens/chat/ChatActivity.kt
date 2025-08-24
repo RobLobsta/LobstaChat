@@ -16,17 +16,21 @@
 
 package com.roblobsta.lobstachat.ui.screens.chat
 
+import android.app.Activity
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.speech.RecognizerIntent
+import android.speech.SpeechRecognizer
 import android.text.Spanned
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -99,6 +103,7 @@ import androidx.navigation.compose.rememberNavController
 import compose.icons.FeatherIcons
 import compose.icons.feathericons.Menu
 import compose.icons.feathericons.MoreVertical
+import compose.icons.feathericons.Mic
 import compose.icons.feathericons.Send
 import compose.icons.feathericons.StopCircle
 import compose.icons.feathericons.User
@@ -123,6 +128,27 @@ private val LOGD: (String) -> Unit = { Log.d(LOGTAG, it) }
 class ChatActivity : ComponentActivity() {
     private val viewModel: ChatScreenViewModel by inject()
     private var modelUnloaded = false
+
+    private val speechRecognizerLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val data = result.data
+            val spokenText = data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.let {
+                it[0]
+            }
+            if (!spokenText.isNullOrEmpty()) {
+                viewModel.onEvent(ChatScreenUIEvent.OnSpokenText(spokenText))
+            }
+        }
+    }
+
+    private fun launchSpeechRecognizer() {
+        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+        }
+        speechRecognizerLauncher.launch(intent)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -165,6 +191,7 @@ class ChatActivity : ComponentActivity() {
                     ChatActivityScreenUI(
                         viewModel,
                         onEditChatParamsClick = { navController.navigate("edit-chat") },
+                        onMicClick = { launchSpeechRecognizer() }
                     )
                 }
             }
@@ -196,6 +223,7 @@ class ChatActivity : ComponentActivity() {
 fun ChatActivityScreenUI(
     viewModel: ChatScreenViewModel,
     onEditChatParamsClick: () -> Unit,
+    onMicClick: () -> Unit,
 ) {
     val context = LocalContext.current
     val currChat by viewModel.currChatState.collectAsStateWithLifecycle(lifecycleOwner = LocalLifecycleOwner.current)
@@ -310,7 +338,7 @@ fun ChatActivityScreenUI(
                             .background(MaterialTheme.colorScheme.surface),
                 ) {
                     if (currChat != null) {
-                        ScreenUI(viewModel, currChat!!)
+                        ScreenUI(viewModel, currChat!!, onMicClick)
                     }
                 }
             }
@@ -347,6 +375,7 @@ fun ChatActivityScreenUI(
 private fun ColumnScope.ScreenUI(
     viewModel: ChatScreenViewModel,
     currChat: Chat,
+    onMicClick: () -> Unit,
 ) {
     val isGeneratingResponse by viewModel.isGeneratingResponse.collectAsStateWithLifecycle()
     RAMUsageLabel(viewModel)
@@ -359,6 +388,7 @@ private fun ColumnScope.ScreenUI(
     MessageInput(
         viewModel,
         isGeneratingResponse,
+        onMicClick,
     )
 }
 
@@ -679,6 +709,7 @@ private fun LazyItemScope.MessageListItem(
 private fun MessageInput(
     viewModel: ChatScreenViewModel,
     isGeneratingResponse: Boolean,
+    onMicClick: () -> Unit,
 ) {
     val currChat by viewModel.currChatState.collectAsStateWithLifecycle()
     val modelLoadingState by viewModel.modelLoadState.collectAsStateWithLifecycle()
@@ -688,7 +719,16 @@ private fun MessageInput(
             text = stringResource(R.string.chat_select_model),
         )
     } else {
+        val uiState by viewModel.uiState.collectAsStateWithLifecycle()
         var questionText by remember { mutableStateOf(viewModel.questionTextDefaultVal ?: "") }
+
+        LaunchedEffect(uiState.spokenText) {
+            if (!uiState.spokenText.isNullOrEmpty()) {
+                questionText = uiState.spokenText!!
+                viewModel.onEvent(ChatScreenUIEvent.OnSpokenText(""))
+            }
+        }
+
         val keyboardController = LocalSoftwareKeyboardController.current
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -757,6 +797,14 @@ private fun MessageInput(
                             }
                         }
                     } else {
+                        IconButton(onClick = onMicClick) {
+                            Icon(
+                                imageVector = FeatherIcons.Mic,
+                                contentDescription = "Voice input",
+                                tint = MaterialTheme.colorScheme.onPrimary,
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
                         IconButton(
                             enabled = questionText.isNotEmpty(),
                             modifier =

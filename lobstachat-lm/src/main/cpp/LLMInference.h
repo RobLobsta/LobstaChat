@@ -19,38 +19,23 @@ struct InferenceParams {
 };
 
 class LLMInference {
-    // llama.cpp-specific types
-    llama_context* _ctx;
-    llama_model*   _model;
-    llama_sampler* _sampler;
-    llama_token    _currToken;
-    llama_batch    _batch;
-
-    // container to store user/assistant messages in the chat
-    std::vector<llama_chat_message> _messages;
-    // stores the string generated after applying
-    // the chat-template to all messages in `_messages`
-    std::vector<char> _formattedMessages;
-    // stores the tokens for the last query
-    // appended to `_messages`
-    std::vector<llama_token> _promptTokens;
-    int                      _prevLen = 0;
-    const char*              _chatTemplate;
-
-    // stores the complete response for the given query
-    std::string _response;
-    std::string _cacheResponseTokens;
-    // whether to cache previous messages in `_messages`
-    bool _storeChats;
-
-    // response generation metrics
-    int64_t _responseGenerationTime = 0;
-    long    _responseNumTokens      = 0;
-
-    // length of context window consumed during the conversation
-    int _nCtxUsed = 0;
-
+private:
     bool _isValidUtf8(const char* response);
+
+    struct llama_model*  _model   = nullptr;
+    struct llama_context* _ctx     = nullptr;
+    struct llama_batch   _batch;
+    struct llama_sampler* _sampler = nullptr;
+    std::vector<llama_chat_message> _messages;
+    const char*          _chatTemplate;
+    std::vector<char>    _formattedMessages;
+    std::string          _response;
+    std::string          _cacheResponseTokens;
+    bool                 _storeChats;
+    int                  _nCtxUsed;
+    int                  _prevLen;
+    int64_t              _responseGenerationTime;
+    int                  _responseNumTokens;
 
   public:
     void loadModel(const char* modelPath, const InferenceParams& params);
