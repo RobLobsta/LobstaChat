@@ -36,6 +36,7 @@ private:
     int                  _prevLen;
     int64_t              _responseGenerationTime;
     int                  _responseNumTokens;
+    std::vector<llama_token_data> _candidates;
 
   public:
     void loadModel(const char* modelPath, const InferenceParams& params);

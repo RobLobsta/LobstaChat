@@ -72,7 +72,7 @@ Java_com_roblobsta_lobstachat_lm_LobstaChatLM_startCompletion(JNIEnv* env, jobje
     const char* promptCstr   = env->GetStringUTFChars(prompt, &isCopy);
     auto*       llmInference = reinterpret_cast<LLMInference*>(modelPtr);
     llmInference->startCompletion(promptCstr);
-    env->ReleaseStringUTFChars(prompt, promptCItr);
+    env->ReleaseStringUTFChars(prompt, promptCstr);
 }
 
 extern "C" JNIEXPORT jstring JNICALL

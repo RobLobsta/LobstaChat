@@ -43,6 +43,15 @@ You can have a hands-free voice conversation with the AI.
 5.  The model's response will be spoken aloud, and the app will automatically start listening for your next input.
 6.  Tap the "headphones" icon again to stop the voice conversation mode.
 
+### Model Recommendation
+
+To help you choose the best model for your device, LobstaChat now includes a model recommendation feature. When you open the "Add New Model" screen, the app will:
+-   Check your device's specifications, including available RAM, and hardware acceleration capabilities.
+-   Recommend models that are compatible with your device.
+-   Display your device's specifications at the bottom of the screen.
+
+This ensures that you have a smooth and performant experience with the models you choose.
+
 ## Contributing
 
 This project is open source. Contributions are welcome! Please feel free to open an issue or submit a pull request.

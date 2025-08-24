@@ -269,7 +269,7 @@ class ChatScreenViewModel(
                         }
                     },
                     onPartialResponseGenerated = {
-                        _uiState.value = _uiState.value.copy(partialResponse = it)
+                        _uiState.value = _uiState.value.copy(partialResponse = _uiState.value.partialResponse + it)
                     },
                     onSuccess = { response ->
                         _uiState.value = _uiState.value.copy(isGeneratingResponse = false)

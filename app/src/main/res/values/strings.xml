@@ -68,6 +68,7 @@
     <string name="tasks_manage_tasks_desc">Tasks are chat templates with a system prompt and model defined. Use them to perform quick actions with the selected SLM model.</string>
     <string name="dialog_delete_task_title">Delete Task</string>
     <string name="add_new_model_title">Add New Model</string>
+    <string name="device_specs_title">Device Specifications</string>
     <string name="download_model_step_des">Download a model to your device. Models are files with a .gguf extension. Choose any model from the list below to start downloading it on your device: </string>
     <string name="download_model_browse_hf">Browse from HuggingFace</string>
     <string name="download_model_download">Download Model</string>

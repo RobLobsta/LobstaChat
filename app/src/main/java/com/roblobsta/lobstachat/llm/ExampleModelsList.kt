@@ -25,28 +25,38 @@ import com.roblobsta.lobstachat.data.LLMModel
 val exampleModelsList =
     listOf(
         LLMModel(
+            name = "SmolLM-135M.gguf",
+            url = "https://huggingface.co/huggingface-community/SmolLM-135M-GGUF/resolve/main/SmolLM-135M-q4_k_m.gguf",
+            requiredRam = 512,
+        ),
+        LLMModel(
             name = "LobstaLM2 360M Instruct GGUF",
             url =
                 "https://huggingface.co/HuggingFaceTB/LobstaLM2-360M-Instruct-GGUF/resolve/main/lobstalm2-360m-instruct-q8_0.gguf",
+            requiredRam = 1024,
         ),
         LLMModel(
             name = "LobstaLM2 1.7B Instruct GGUF",
             url =
                 "https://huggingface.co/HuggingFaceTB/LobstaLM2-1.7B-Instruct-GGUF/resolve/main/lobstalm2-1.7b-instruct-q4_k_m.gguf",
+            requiredRam = 4096,
         ),
         LLMModel(
             name = "Qwen2.5 1.5B Q8 Instruct GGUF",
             url =
                 "https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct-GGUF/resolve/main/qwen2.5-1.5b-instruct-q8_0.gguf",
+            requiredRam = 3072,
         ),
         LLMModel(
             name = "Qwen2.5 3B Q5_K_M Instruct GGUF",
             url =
                 "https://huggingface.co/Qwen/Qwen2.5-3B-Instruct-GGUF/resolve/main/qwen2.5-3b-instruct-q5_k_m.gguf",
+            requiredRam = 6144,
         ),
         LLMModel(
             name = "Qwen2.5 Coder 3B Instruct Q5 GGUF",
             url =
                 "https://huggingface.co/Qwen/Qwen2.5-Coder-3B-Instruct-GGUF/resolve/main/qwen2.5-coder-3b-instruct-q5_0.gguf",
+            requiredRam = 6144,
         ),
     )

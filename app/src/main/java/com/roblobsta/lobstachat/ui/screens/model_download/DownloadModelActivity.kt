@@ -57,6 +57,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -198,10 +199,13 @@ class DownloadModelActivity : ComponentActivity() {
     }
 
     @Composable
-    private fun ModelsList(viewModel: DownloadModelsViewModel) {
+    private fun ModelsList(
+        viewModel: DownloadModelsViewModel,
+        models: List<LLMModel>,
+    ) {
         var selectedModel by remember { viewModel.selectedModelState }
         Column(verticalArrangement = Arrangement.Center) {
-            exampleModelsList.forEach { model ->
+            models.forEach { model ->
                 Row(
                     Modifier
                         .clickable { selectedModel = model }
@@ -259,8 +263,13 @@ class DownloadModelActivity : ComponentActivity() {
                 style = MaterialTheme.typography.labelSmall,
             )
             Spacer(modifier = Modifier.height(4.dp))
-            ModelsList(viewModel)
+            val recommendedModels by viewModel.recommendedModels.collectAsState()
+            ModelsList(viewModel, recommendedModels)
             Spacer(modifier = Modifier.height(16.dp))
+            val deviceSpecs by viewModel.deviceSpecs.collectAsState()
+            deviceSpecs?.let {
+                DeviceSpecsView(it)
+            }
             OutlinedButton(
                 enabled =
                     viewModel.selectedModelState.value != null ||
@@ -387,5 +396,21 @@ class DownloadModelActivity : ComponentActivity() {
             return ggufMagicNumberBytes.contentEquals(byteArrayOf(71, 71, 85, 70))
         }
         return false
+    }
+
+    @Composable
+    private fun DeviceSpecsView(deviceSpecs: DeviceSpecs) {
+        Column {
+            Text(
+                text = stringResource(R.string.device_specs_title),
+                style = MaterialTheme.typography.headlineSmall,
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text("Available RAM: ${deviceSpecs.availableRam} MB")
+            Text("Total RAM: ${deviceSpecs.totalRam} MB")
+            Text("Available Disk Space: ${deviceSpecs.availableDiskSpace} GB")
+            Text("NPU: ${if (deviceSpecs.hasNpu) "Available" else "Not Available"}")
+            Text("GPU: ${if (deviceSpecs.hasGpu) "Available" else "Not Available"}")
+        }
     }
 }

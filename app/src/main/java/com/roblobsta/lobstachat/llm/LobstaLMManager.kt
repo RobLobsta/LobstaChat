@@ -144,7 +144,7 @@ class LobstaLMManager(
                             currentInstance.getResponseAsFlow(query).collect { piece ->
                                 response += piece
                                 withContext(Dispatchers.Main) {
-                                    onPartialResponseGenerated(response)
+                                    onPartialResponseGenerated(piece)
                                 }
                             }
                         }
