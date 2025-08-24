@@ -54,6 +54,7 @@ LLMInference::loadModel(const char* model_path, const InferenceParams& params) {
 
     // initialize sampler
     _sampler = llama_sampler_init_temp(nullptr, params.temperature);
+    _candidates.reserve(llama_n_vocab(_model));
 
     _formattedMessages = std::vector<char>(llama_n_ctx(_ctx));
     _messages.clear();
@@ -167,24 +168,23 @@ LLMInference::completionLoop() {
         throw std::runtime_error("llama_decode() failed");
     }
 
-    auto * logits  = llama_get_logits_ith(_ctx, _batch.n_tokens - 1);
-    auto n_vocab = llama_n_vocab(llama_get_model(_ctx));
+    auto* logits  = llama_get_logits_ith(_ctx, _batch.n_tokens - 1);
+    auto  n_vocab = llama_n_vocab(llama_get_model(_ctx));
 
-    std::vector<llama_token_data> candidates;
-    candidates.reserve(n_vocab);
+    _candidates.clear();
     for (llama_token token_id = 0; token_id < n_vocab; token_id++) {
-        candidates.push_back({token_id, logits[token_id], 0.0f});
+        _candidates.push_back({ token_id, logits[token_id], 0.0f });
     }
 
-    llama_token_data_array candidates_p = { candidates.data(), candidates.size(), false };
+    llama_token_data_array candidates_p = { _candidates.data(), _candidates.size(), false };
 
     // sample a token and check if it is an EOG (end of generation token)
     // convert the integer token to its corresponding word-piece
-    _currToken = llama_sample_token_greedy(_ctx, &candidates_p);
+    _currToken = llama_sampler_sample(_sampler, _ctx, &candidates_p);
     llama_sampler_accept(_sampler, _ctx, _currToken);
 
     if (llama_token_is_eog(llama_get_model(_ctx), _currToken)) {
-        addChatMessage(strdup(_response.data()), "assistant");
+        addChatMessage(_response.c_str(), "assistant");
         _response.clear();
         return "";
     }

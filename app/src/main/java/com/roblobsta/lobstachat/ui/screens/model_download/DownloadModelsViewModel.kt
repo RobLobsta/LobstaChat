@@ -59,11 +59,38 @@ class DownloadModelsViewModel(
     private val application: Application,
     private val appDB: AppDB,
     private val hfModelsAPI: HFModelsAPI,
+    private val deviceSpecProvider: DeviceSpecProvider,
 ) : ViewModel() {
     private val _modelInfoAndTree =
         MutableStateFlow<Pair<HFModelInfo.ModelInfo, List<HFModelTree.HFModelFile>>?>(null)
     val modelInfoAndTree: StateFlow<Pair<HFModelInfo.ModelInfo, List<HFModelTree.HFModelFile>>?> =
         _modelInfoAndTree
+
+    private val _deviceSpecs = MutableStateFlow<DeviceSpecs?>(null)
+    val deviceSpecs: StateFlow<DeviceSpecs?> = _deviceSpecs
+
+    init {
+        getDeviceSpecs()
+    }
+
+    private fun getDeviceSpecs() {
+        _deviceSpecs.value = DeviceSpecs(
+            availableRam = deviceSpecProvider.getAvailableRam(),
+            totalRam = deviceSpecProvider.getTotalRam(),
+            availableDiskSpace = deviceSpecProvider.getAvailableDiskSpace(),
+            hasNpu = deviceSpecProvider.hasNpu(),
+            hasGpu = deviceSpecProvider.hasGpu(),
+        )
+        filterRecommendedModels()
+    }
+
+    private val _recommendedModels = MutableStateFlow<List<LLMModel>>(emptyList())
+    val recommendedModels: StateFlow<List<LLMModel>> = _recommendedModels
+
+    private fun filterRecommendedModels() {
+        val availableRam = _deviceSpecs.value?.availableRam ?: 0
+        _recommendedModels.value = exampleModelsList.filter { it.requiredRam <= availableRam }
+    }
 
     val selectedModelState = mutableStateOf<LLMModel?>(null)
     val modelUrlState = mutableStateOf("")
