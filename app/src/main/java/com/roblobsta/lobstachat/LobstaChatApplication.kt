@@ -17,19 +17,18 @@
 package com.roblobsta.lobstachat
 
 import android.app.Application
+import com.roblobsta.lobstachat.data.di.dataModule
 import com.roblobsta.lobstachat.di.appModule
+import com.roblobsta.lobstachat.hf_api.di.apiModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
-import org.koin.ksp.generated.module
-
-import com.roblobsta.lobstachat.hf_api.di.apiModule
 
 class LobstaChatApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         startKoin {
             androidContext(this@LobstaChatApplication)
-            modules(KoinAppModule().module, appModule, apiModule)
+            modules(appModule, apiModule, dataModule)
         }
     }
 }

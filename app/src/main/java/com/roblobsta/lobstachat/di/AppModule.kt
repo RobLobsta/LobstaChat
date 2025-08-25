@@ -15,14 +15,15 @@ import io.noties.markwon.inlineparser.MarkwonInlineParserPlugin
 import io.noties.markwon.linkify.LinkifyPlugin
 import io.noties.markwon.syntax.Prism4jThemeDarkula
 import io.noties.markwon.syntax.SyntaxHighlightPlugin
+import com.roblobsta.lobstachat.data.repositories.SettingsRepository
+import com.roblobsta.lobstachat.data.repositories.SettingsRepositoryImpl
 import io.noties.prism4j.Prism4j
 import com.roblobsta.lobstachat.R
-import com.roblobsta.lobstachat.data.SettingsRepository
 import com.roblobsta.lobstachat.prism4j.PrismGrammarLocator
 import org.koin.dsl.module
 
 val appModule = module {
-    single { SettingsRepository(get()) }
+    single<SettingsRepository> { SettingsRepositoryImpl(get()) }
     single {
         val context = get<Context>()
         val prism4j = Prism4j(PrismGrammarLocator())

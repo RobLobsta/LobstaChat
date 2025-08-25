@@ -2,9 +2,10 @@ package com.roblobsta.lobstachat
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.roblobsta.lobstachat.llm.ModelsRepository
+import com.roblobsta.lobstachat.data.repositories.ModelsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import org.koin.android.annotation.KoinViewModel
 
@@ -18,7 +19,7 @@ class MainViewModel(
 
     init {
         viewModelScope.launch {
-            val hasModels = modelsRepository.checkIfModelsDownloaded()
+            val hasModels = modelsRepository.getDownloadedModels().first().isNotEmpty()
             _uiState.value = if (hasModels) MainUiState.GoToChat else MainUiState.GoToModelDownload
         }
     }
