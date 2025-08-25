@@ -25,11 +25,11 @@ import androidx.room.Query
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 import java.util.Date
+import androidx.room.Embedded
+import androidx.room.Index
 
 private const val LOGTAG = "[ChatDB-Kt]"
 private val LOGD: (String) -> Unit = { Log.d(LOGTAG, it) }
-
-import androidx.room.Index
 
 @Entity(tableName = "Chat", indices = [Index(value = ["dateUsed"]), Index(value = ["folderId"])])
 data class Chat(
@@ -59,22 +59,11 @@ data class Chat(
      */
     var llmModelId: Long = -1L,
     @Embedded
-    var inferenceParams: InferenceParams = InferenceParams(),
-    /**
-     * The maximum number of tokens that can be used as context to the model
-     * This is editable by users in the EditChatSettingsScreen.kt.
-     * Its initial value is taken from the GGUF model selected by the user.
-     */
-    var contextSize: Int = 0,
+    var inferenceParams: InferenceParamsData = InferenceParamsData(),
     /**
      * The number of tokens that have been used as context in the current chat session
      */
     var contextSizeConsumed: Int = 0,
-    /**
-     * The template that is used to format the chat messages.
-     * This is editable by users in the EditChatSettingsScreen.kt
-     */
-    var chatTemplate: String = "",
     /**
      * Whether this chat is a task or not.
      * Tasks are special chats that are used to perform a specific task.

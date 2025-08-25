@@ -11,8 +11,10 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import org.koin.core.annotation.Single
 import java.util.Date
+import com.roblobsta.lobstachat.R
 
 val MIGRATION_1_2 =
     object : Migration(1, 2) {
@@ -58,8 +60,6 @@ abstract class AppRoomDatabase : RoomDatabase() {
     abstract fun folderDao(): FolderDao
 }
 
-import com.roblobsta.lobstachat.R
-
 @Single
 class AppDB(
     private val application: Application,
@@ -97,7 +97,6 @@ class AppDB(
      */
     suspend fun addChat(
         chatName: String,
-        chatTemplate: String = "",
         systemPrompt: String = application.getString(R.string.default_system_prompt),
         llmModelId: Long = -1,
         isTask: Boolean = false,
@@ -110,8 +109,6 @@ class AppDB(
                     dateCreated = Date(),
                     dateUsed = Date(),
                     llmModelId = llmModelId,
-                    contextSize = 2048,
-                    chatTemplate = chatTemplate,
                     isTask = isTask,
                 )
             val newChatId = db.chatsDao().insertChat(newChat)
@@ -251,7 +248,7 @@ class AppDB(
         name: String,
         systemPrompt: String,
         modelId: Long,
-        inferenceParams: InferenceParams
+        inferenceParams: InferenceParamsData
     ) = withContext(Dispatchers.IO) {
         db.personaDao().insertPersona(Persona(name = name, systemPrompt = systemPrompt, modelId = modelId, inferenceParams = inferenceParams))
     }
