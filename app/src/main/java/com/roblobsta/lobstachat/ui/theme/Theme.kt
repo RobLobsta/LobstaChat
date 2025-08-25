@@ -78,19 +78,6 @@ private val darkScheme =
         error = errorDark,
     )
 
-private val lightScheme =
-    lightColorScheme(
-        primary = primaryLight,
-        onPrimary = onPrimaryLight,
-        secondary = secondaryLight,
-        tertiary = tertiaryLight,
-        background = backgroundLight,
-        surface = surfaceLight,
-        onBackground = onBackgroundLight,
-        onSurface = onSurfaceLight,
-        error = errorLight,
-    )
-
 @Composable
 fun LobstaChatTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),

@@ -1,31 +1,59 @@
 [versions]
-agp = "8.6.0"
-kotlin = "2.0.0"
+kotlin = "1.9.23"
+compose = "1.5.13"
+room = "2.6.1"
+coroutines = "1.7.3"
+ksp = "1.9.23-1.0.19"
+agp = "8.2.2"
+appcompat = "1.7.1"
 coreKtx = "1.13.1"
 junit = "4.13.2"
 junitVersion = "1.2.1"
 espressoCore = "3.6.1"
 lifecycleRuntimeKtx = "2.8.1"
 activityCompose = "1.9.0"
-composeBom = "2024.08.00"
+composeBom = "2024.02.01"
 navigationComposeVersion = "2.7.7"
+lifecycleViewmodelCompose = "2.8.1"
 koin = "3.5.6"
 koinAnnotations = "1.3.1"
-jetbrainsKotlinJvm = "2.0.0"
+jetbrainsKotlinJvm = "1.9.23"
 uiTextGoogleFonts = "1.6.7"
 composeIcons = "1.1.0"
 paging = "3.3.5"
-room = "2.6.1"
 markwon = "4.6.2"
 prism4j = "2.0.0"
-ktor = "3.2.3"
-kotlinSerialization = "1.9.0"
-kotlinxCoroutinesTest = "1.9.0"
+ktor = "2.3.12"
+kotlinSerialization = "1.9.23"
+kotlinxCoroutinesTest = "1.7.3"
 androidxTestRunner = "1.6.2"
 ndk = "27.2.12479018"
-appcompat = "1.7.1"
+
 
 [libraries]
+# Compose UI and Material
+compose-ui = { group = "androidx.compose.ui", name = "ui" }
+compose-material3 = { group = "androidx.compose.material3", name = "material3" }
+compose-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
+compose-runtime = { group = "androidx.compose.runtime", name = "runtime" }
+# Room
+room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
+room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
+room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
+# Coroutines
+coroutines-android = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-android", version.ref = "coroutines" }
+coroutines-core = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "coroutines" }
+# KSP
+ksp = { group = "com.google.devtools.ksp", name = "symbol-processing-api", version.ref = "ksp" }
+# Koin (DI example)
+koin-android = { group = "io.insert-koin", name = "koin-android", version = "3.5.3" }
+koin-androidx-compose = { group = "io.insert-koin", name = "koin-androidx-compose", version = "3.5.3" }
+koin-core = { group = "io.insert-koin", name = "koin-core", version = "3.5.3" }
+koin-annotations = { module = "io.insert-koin:koin-annotations", version.ref = "koinAnnotations" }
+koin-ksp-compiler = { module = "io.insert-koin:koin-ksp-compiler", version.ref = "koinAnnotations" }
+kotlin-stdlib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib", version.ref = "kotlin" }
+
+
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 jetbrains-annotations = { group = "org.jetbrains", name = "annotations", version = "23.0.0" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -45,21 +73,12 @@ google-android-material = { group = "com.google.android.material", name = "mater
 
 androidx-compose-navigation = { module = "androidx.navigation:navigation-compose", version.ref = "navigationComposeVersion" }
 
-koin-android = { module = "io.insert-koin:koin-android", version.ref = "koin" }
-koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }
-koin-androidx-compose = { module = "io.insert-koin:koin-androidx-compose", version.ref = "koin" }
-koin-annotations = { module = "io.insert-koin:koin-annotations", version.ref = "koinAnnotations" }
-koin-ksp-compiler = { module = "io.insert-koin:koin-ksp-compiler", version.ref = "koinAnnotations" }
 androidx-ui-text-google-fonts = { group = "androidx.compose.ui", name = "ui-text-google-fonts", version.ref = "uiTextGoogleFonts" }
 
 composeIcons-feather = { module = "br.com.devsrsouza.compose.icons:feather", version.ref = "composeIcons" }
 
 androidx-paging-runtime = { module = "androidx.paging:paging-runtime", version.ref = "paging" }
 androidx-paging-compose = { module = "androidx.paging:paging-compose", version.ref = "paging" }
-
-androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
-androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
-androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
 
 markwon-core = { module = "io.noties.markwon:core", version.ref = "markwon" }
 markwon-ext-latex = { module = "io.noties.markwon:ext-latex", version.ref = "markwon" }
@@ -80,10 +99,10 @@ kotlinx-coroutines = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core",
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutinesTest" }
 androidx-test-runner = { module = "androidx.test:runner", version.ref = "androidxTestRunner" }
 
+
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
-kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 android-library = { id = "com.android.library", version.ref = "agp" }
 jetbrains-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "jetbrainsKotlinJvm" }
-
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
