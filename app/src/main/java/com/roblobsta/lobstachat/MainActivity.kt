@@ -20,17 +20,10 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.enableEdgeToEdge
-import com.roblobsta.lobstachat.llm.ModelsRepository
-import com.roblobsta.lobstachat.ui.screens.chat.ChatActivity
-import com.roblobsta.lobstachat.ui.screens.model_download.DownloadModelActivity
-import org.koin.android.ext.android.inject
-
 import androidx.lifecycle.lifecycleScope
-import com.roblobsta.lobstachat.llm.ModelsRepository
 import com.roblobsta.lobstachat.ui.screens.chat.ChatActivity
 import com.roblobsta.lobstachat.ui.screens.model_download.DownloadModelActivity
 import kotlinx.coroutines.launch
-import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class MainActivity : ComponentActivity() {

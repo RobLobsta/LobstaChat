@@ -19,7 +19,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -28,28 +28,30 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.roblobsta.lobstachat.R
-import com.roblobsta.lobstachat.data.Folder
+import com.roblobsta.lobstachat.data.models.Folder
+import java.util.Date
 
 @Composable
 fun ChangeFolderDialogUI(
     onDismissRequest: () -> Unit,
-    initialChatFolderId: Long,
+    initialChatFolderId: Int?,
     folders: List<Folder>,
-    onUpdateFolderId: (Long) -> Unit,
+    onUpdateFolderId: (Int?) -> Unit,
 ) {
     val modifiedFolders = ArrayList(folders)
-    modifiedFolders.add(0, Folder(id = -1L, name = "No Folder"))
-    var selectedFolderId by remember { mutableLongStateOf(initialChatFolderId) }
+    modifiedFolders.add(0, Folder(id = -1, name = "No Folder", createdAt = Date(0)))
+    var selectedFolderId by remember { mutableStateOf(initialChatFolderId) }
     Surface {
         Dialog(onDismissRequest) {
             Column(
                 modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .background(
-                            MaterialTheme.colorScheme.surfaceContainer,
-                            RoundedCornerShape(8.dp),
-                        ).padding(16.dp),
+                Modifier
+                    .fillMaxWidth()
+                    .background(
+                        MaterialTheme.colorScheme.surfaceContainer,
+                        RoundedCornerShape(8.dp),
+                    )
+                    .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Text(
@@ -60,16 +62,20 @@ fun ChangeFolderDialogUI(
                     items(modifiedFolders) { folder ->
                         Row(
                             modifier =
-                                Modifier
-                                    .padding(8.dp)
-                                    .fillMaxWidth()
-                                    .clickable {
-                                        selectedFolderId = folder.id
-                                        onUpdateFolderId(folder.id)
-                                    },
+                            Modifier
+                                .padding(8.dp)
+                                .fillMaxWidth()
+                                .clickable {
+                                    val newFolderId = if (folder.id == -1) null else folder.id
+                                    selectedFolderId = newFolderId
+                                    onUpdateFolderId(newFolderId)
+                                },
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            RadioButton(selected = folder.id == selectedFolderId, onClick = null)
+                            RadioButton(
+                                selected = folder.id == (selectedFolderId ?: -1),
+                                onClick = null
+                            )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(folder.name)
                         }
